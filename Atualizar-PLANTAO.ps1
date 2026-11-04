@@ -3,7 +3,7 @@
 # (inclusive a credencial do computador) ligados a ela; trocar de pasta obrigaria a cadastrar o
 # computador de novo, por isso a pasta é sempre a mesma e só o conteúdo é trocado.
 #
-# Uso (pelo "Atualizar PLANTAO.cmd", com dois cliques):
+# Uso (pelo "Atualizar-PLANTAO.cmd", com dois cliques):
 #   Atualizar-PLANTAO.ps1                 atualiza agora e mostra o resultado
 #   Atualizar-PLANTAO.ps1 -Agendar        também cria a tarefa do Windows que atualiza ao entrar no usuário
 #   Atualizar-PLANTAO.ps1 -Silencioso     sem janelas (usado pela tarefa); o resultado vai para atualizar.log
