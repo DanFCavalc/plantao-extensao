@@ -65,18 +65,47 @@ try {
   $manifestAtual = Join-Path $Pasta 'manifest.json'
   if (Test-Path $manifestAtual) { $versaoAtual = (Get-Content -Path $manifestAtual -Raw -Encoding UTF8 | ConvertFrom-Json).version }
 
+  # Mesma versão: confere arquivo por arquivo (uma queda de energia pode deixar arquivos
+  # corrompidos ou vazios). Algum diferente ou faltando: reinstala a mesma versão.
+  $corrompidos = @()
   if ($versaoAtual -eq $versaoNova) {
+    $baseNovo = (Resolve-Path $novo).Path.TrimEnd('') + ''
+    foreach ($f in Get-ChildItem -Path $novo -Recurse -File) {
+      $rel = $f.FullName.Substring($baseNovo.Length).TrimStart([char]92)
+      $instalado = Join-Path $Pasta $rel
+      if (-not (Test-Path $instalado) -or (Get-FileHash -Path $instalado -Algorithm SHA256).Hash -ne (Get-FileHash -Path $f.FullName -Algorithm SHA256).Hash) { $corrompidos += $rel }
+    }
+  }
+
+  if ($versaoAtual -eq $versaoNova -and $corrompidos.Count -eq 0) {
     Avisar "PLANTÃO já está na versão $versaoNova (em $Pasta)."
   } else {
     # 3. Troca o conteúdo, sempre na mesma pasta.
     if (-not (Test-Path $Pasta)) { New-Item -ItemType Directory -Path $Pasta -Force | Out-Null }
     Get-ChildItem -Path $Pasta -Force | Remove-Item -Recurse -Force
     Copy-Item -Path (Join-Path $novo '*') -Destination $Pasta -Recurse -Force
-    if ($versaoAtual) {
+    if ($corrompidos.Count -gt 0) {
+      Avisar "PLANTÃO $versaoNova reparado ($($corrompidos.Count) arquivo(s) corrompido(s) ou faltando: $(($corrompidos | Select-Object -First 5) -join ', ')). Reinicie o Chrome (ou clique em Recarregar em chrome://extensions)."
+    } elseif ($versaoAtual) {
       Avisar "PLANTÃO atualizado de $versaoAtual para $versaoNova. Reinicie o Chrome (ou clique em Recarregar em chrome://extensions)."
     } else {
       Avisar "PLANTÃO $versaoNova instalado em $Pasta. No Chrome: chrome://extensions, ligue o Modo do desenvolvedor, Carregar sem compactação e escolha essa pasta."
     }
+  }
+
+  # 3b. Este script também se atualiza: a cópia em C:\PLANTAO (a da tarefa agendada) recebe a versão
+  # publicada junto com a extensão, se for da mesma extensão (mesma chave).
+  if (-not $Zip) {
+    try {
+      $copiaScript = Join-Path $Raiz 'Atualizar-PLANTAO.ps1'
+      $scriptNovo = Join-Path $tmp 'Atualizar-PLANTAO.ps1'
+      Invoke-WebRequest -UseBasicParsing -Uri "$Base/Atualizar-PLANTAO.ps1" -OutFile $scriptNovo
+      $textoNovo = Get-Content -Path $scriptNovo -Raw -Encoding UTF8
+      if ($textoNovo -match [regex]::Escape($ChavePublica) -and (Test-Path $copiaScript) -and
+          (Get-FileHash $scriptNovo).Hash -ne (Get-FileHash $copiaScript).Hash) {
+        Copy-Item -Path $scriptNovo -Destination $copiaScript -Force
+      }
+    } catch {}
   }
 
   # 4. Tarefa do Windows: atualiza sozinho ao entrar no usuário.
