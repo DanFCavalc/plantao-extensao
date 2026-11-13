@@ -1,6 +1,6 @@
-# PLANTÃO — extensão unificada
+# Auxiliar — extensão unificada
 
-Versões prontas da extensão PLANTÃO para o Chrome. A extensão só funciona em computadores
+Versões prontas da extensão Auxiliar para o Chrome. A extensão só funciona em computadores
 autorizados: sem licença, ela não liga e os módulos não recebem dados.
 
 ## Instalar num computador (uma vez)
@@ -31,7 +31,7 @@ extensão instalada; carregar de uma pasta nova obriga a autorizar o computador 
 ## Segurança
 
 O atualizador só instala um pacote que confira com a soma SHA-256 publicada junto e que tenha
-a chave da extensão PLANTÃO (ID `mmboncpcdefjgchlbhgkhckehcgaolmg`).
+a chave da extensão Auxiliar (ID `mmboncpcdefjgchlbhgkhckehcgaolmg`).
 
 ## Versões
 

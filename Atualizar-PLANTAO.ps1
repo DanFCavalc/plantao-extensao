@@ -1,4 +1,4 @@
-﻿# Atualizar-PLANTAO.ps1 - baixa a versão mais nova da extensão PLANTÃO unificada e a coloca
+﻿# Atualizar-PLANTAO.ps1 - baixa a versão mais nova da extensão Auxiliar e a coloca
 # sempre na mesma pasta (padrão C:\PLANTAO\extensao). O Chrome guarda os dados da extensão
 # (inclusive a credencial do computador) ligados a ela; trocar de pasta obrigaria a cadastrar o
 # computador de novo, por isso a pasta é sempre a mesma e só o conteúdo é trocado.
@@ -67,18 +67,18 @@ try {
   }
 
   # 0. Assinado por quem publica?
-  if (-not (AssinaturaValida $arquivo "$arquivo.sig")) { throw 'O pacote não tem assinatura válida de quem publica o PLANTÃO. Nada foi alterado.' }
+  if (-not (AssinaturaValida $arquivo "$arquivo.sig")) { throw 'O pacote não tem assinatura válida de quem publica o Auxiliar. Nada foi alterado.' }
 
   # 1. A soma confere?
   $esperado = ((Get-Content -Path "$arquivo.sha256" -Raw) -split '\s+')[0].Trim().ToLower()
   $obtido = (Get-FileHash -Path $arquivo -Algorithm SHA256).Hash.ToLower()
   if ($esperado -ne $obtido) { throw 'O arquivo baixado não confere com a soma publicada. Nada foi alterado.' }
 
-  # 2. É a extensão PLANTÃO (mesma chave, mesmo ID)?
+  # 2. É a extensão Auxiliar (mesma chave, mesmo ID)?
   $novo = Join-Path $tmp 'novo'
   Expand-Archive -Path $arquivo -DestinationPath $novo
   $manifest = Get-Content -Path (Join-Path $novo 'manifest.json') -Raw -Encoding UTF8 | ConvertFrom-Json
-  if ($manifest.key -ne $ChavePublica) { throw 'O pacote não é a extensão PLANTÃO (chave diferente). Nada foi alterado.' }
+  if ($manifest.key -ne $ChavePublica) { throw 'O pacote não é a extensão Auxiliar (chave diferente). Nada foi alterado.' }
   $versaoNova = $manifest.version
 
   $versaoAtual = ''
@@ -100,18 +100,18 @@ try {
   }
 
   if ($versaoAtual -eq $versaoNova -and $corrompidos.Count -eq 0) {
-    Avisar "PLANTÃO já está na versão $versaoNova (em $Pasta)."
+    Avisar "Auxiliar já está na versão $versaoNova (em $Pasta)."
   } else {
     # 3. Troca o conteúdo, sempre na mesma pasta.
     if (-not (Test-Path $Pasta)) { New-Item -ItemType Directory -Path $Pasta -Force | Out-Null }
     Get-ChildItem -Path $Pasta -Force | Remove-Item -Recurse -Force
     Copy-Item -Path (Join-Path $novo '*') -Destination $Pasta -Recurse -Force
     if ($corrompidos.Count -gt 0) {
-      Avisar "PLANTÃO $versaoNova reparado ($($corrompidos.Count) arquivo(s) corrompido(s) ou faltando: $(($corrompidos | Select-Object -First 5) -join ', ')). Reinicie o Chrome (ou clique em Recarregar em chrome://extensions)."
+      Avisar "Auxiliar $versaoNova reparado ($($corrompidos.Count) arquivo(s) corrompido(s) ou faltando: $(($corrompidos | Select-Object -First 5) -join ', ')). Reinicie o Chrome (ou clique em Recarregar em chrome://extensions)."
     } elseif ($versaoAtual) {
-      Avisar "PLANTÃO atualizado de $versaoAtual para $versaoNova. Reinicie o Chrome (ou clique em Recarregar em chrome://extensions)."
+      Avisar "Auxiliar atualizado de $versaoAtual para $versaoNova. Reinicie o Chrome (ou clique em Recarregar em chrome://extensions)."
     } else {
-      Avisar "PLANTÃO $versaoNova instalado em $Pasta. No Chrome: chrome://extensions, ligue o Modo do desenvolvedor, Carregar sem compactação e escolha essa pasta."
+      Avisar "Auxiliar $versaoNova instalado em $Pasta. No Chrome: chrome://extensions, ligue o Modo do desenvolvedor, Carregar sem compactação e escolha essa pasta."
     }
   }
 
@@ -136,11 +136,11 @@ try {
     if ($PSCommandPath -ne $copia) { Copy-Item -Path $PSCommandPath -Destination $copia -Force }
     $acao = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$copia`" -Pasta `"$Pasta`" -Silencioso"
     $gatilho = New-ScheduledTaskTrigger -AtLogOn -User "$env:USERDOMAIN\$env:USERNAME"
-    Register-ScheduledTask -TaskName 'PLANTAO - atualizar' -Action $acao -Trigger $gatilho -Description 'Atualiza a extensão PLANTÃO unificada ao entrar no Windows.' -Force | Out-Null
+    Register-ScheduledTask -TaskName 'PLANTAO - atualizar' -Action $acao -Trigger $gatilho -Description 'Atualiza a extensão Auxiliar ao entrar no Windows.' -Force | Out-Null
     Avisar "Tarefa 'PLANTAO - atualizar' criada: a extensão se atualiza ao entrar no Windows."
   }
 } catch {
-  Avisar "Falha ao atualizar o PLANTÃO: $($_.Exception.Message)" $true
+  Avisar "Falha ao atualizar o Auxiliar: $($_.Exception.Message)" $true
   if (-not $Silencioso) { exit 1 }
 } finally {
   Remove-Item -Path $tmp -Recurse -Force -ErrorAction SilentlyContinue
